@@ -2,38 +2,37 @@
  * Created by cdv on 11.08.2014.
  */
 var arrRows, arrCols;
+//свойства игрового поля
+var playFieldProps = {
+    rows : 15,
+    cols : 15,
+    styleTD : {
+        width : "10px",
+        height : "10px",
+        border : "1px solid black"
+    },
+    html : ""
+};
 
 (function(){
-    //свойства игрового поля
-    var fieldProp = {
-        rows : 15,
-        cols : 15,
-        styleTD : {
-            width : "10px",
-            height : "10px",
-            border : "1px solid black"
-        },
-        html : ""
-    };
-
     //строим таблицу игрового поля
     var trs = "",
         tds = "";
-    for (var j = 0; j < fieldProp.cols; j++) {
+    for (var j = 0; j < playFieldProps.cols; j++) {
         tds = tds + "<td></td>";
     }
-    for (var i = 0; i < fieldProp.rows; i++) {
+    for (var i = 0; i < playFieldProps.rows; i++) {
         trs = trs + "<tr>" + tds + "</tr>";
     }
-    fieldProp.html = "<table>" + trs + "</table>";
+    playFieldProps.html = "<table>" + trs + "</table>";
 
     //применяем стили игровому полю
     var divPlay = $("#playField");
-    divPlay.html(fieldProp.html);
+    divPlay.html(playFieldProps.html);
     divPlay.find("td").css({
-        width  : fieldProp.styleTD.width,
-        height : fieldProp.styleTD.height,
-        border : fieldProp.styleTD.border
+        width  : playFieldProps.styleTD.width,
+        height : playFieldProps.styleTD.height,
+        border : playFieldProps.styleTD.border
     });
     divPlay.css({
         width : divPlay.find("table").width() + "px",
@@ -53,8 +52,13 @@ var play = {
        arrCols = $(arrRows[iRow]).find("td");
        return $(arrCols[iCol]);
    },
-
+   //перемещает объект на заданную позицию
    moveTo : function(x, y) {
+       console.log("x=" + x + " y="+y);
+       //не допускаем перемещения за пределы поля
+       if ((x > playFieldProps.cols - 1 || x < 0) || (y > playFieldProps.rows - 1 || y < 0)) {
+           return;
+       }
        this.getCell(this.lastPosition[0], this.lastPosition[1]).css("backgroundColor", "#ffffff");
        this.getCell(x, y).css("backgroundColor", "green");
        
@@ -63,21 +67,37 @@ var play = {
    },
 
    moveToLeft : function() {
-
+      this.moveTo(this.lastPosition[0] + 1, playFieldProps.rows - 1);
    },
 
    moveToRight : function() {
+      this.moveTo(this.lastPosition[0] - 1, playFieldProps.rows - 1);
+   },
 
+   shoot : function (){
+      //опеределяем начальную позицию снаряда
+      
    },
 
    go : function() {
-      for (var k = 0; k < arrRows.length; k++) {
+       //Устанавливаем начальное положение объекта
+       this.moveTo(Math.round(playFieldProps.cols/2) - 1, playFieldProps.rows - 1);
 
-          setInterval(function(){
-              console.log(k);
-              play.moveTo(0, k);
-          }, 1000)
-      }
+       //Отлавливаем нажатия клавиш
+       $(document).on("keypress", function(key){
+           console.log(key.keyCode);
+           switch(key.keyCode) {
+               case 39 :
+                   play.moveToLeft();
+                   break;
+               case 37 :
+                   play.moveToRight();
+                   break;
+               case 0:
+                   play.shoot();
+                   break;
+           }
+       });
    }
 };
 
