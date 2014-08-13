@@ -41,6 +41,11 @@ var playFieldProps = {
         marginLeft : "auto"
     });
     arrRows = divPlay.find("table").find("tr");
+
+    //событие на кнопку play
+    $("#controlBtns").find("input[type=button]").on("click", function(){
+        play.go();
+    })
 }());
 
 
@@ -82,9 +87,9 @@ var play = {
    go : function() {
        //Устанавливаем начальное положение объекта
        this.moveTo(Math.round(playFieldProps.cols/2) - 1, playFieldProps.rows - 1);
-
+       this.lastPosition = [0, 0];
        //Отлавливаем нажатия клавиш
-       $(document).on("keypress", function(key){
+       $(document).on("keydown", function(key){
            console.log(key.keyCode);
            switch(key.keyCode) {
                case 39 :
