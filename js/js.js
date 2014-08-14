@@ -50,14 +50,15 @@ var playFieldProps = {
 
 
 var play = {
+
+    //возвращает объект ячейки по положению на оси X Y
+    getCell : function(iCol, iRow) {
+        arrCols = $(arrRows[iRow]).find("td");
+        return $(arrCols[iCol]);
+    },
+
     gun : {
         lastPosition : [0, 0],
-
-        //возвращает объект ячейки местоположения пушки
-        getCell : function(iCol, iRow) {
-            arrCols = $(arrRows[iRow]).find("td");
-            return $(arrCols[iCol]);
-        },
 
         //перемещает объект на заданную позицию
         moveTo : function(x, y) {
@@ -66,8 +67,8 @@ var play = {
             if ((x > playFieldProps.cols - 1 || x < 0) || (y > playFieldProps.rows - 1 || y < 0)) {
                 return;
             }
-            this.getCell(this.lastPosition[0], this.lastPosition[1]).css("backgroundColor", "#ffffff");
-            this.getCell(x, y).css("backgroundColor", "green");
+            play.getCell(this.lastPosition[0], this.lastPosition[1]).css("backgroundColor", "#ffffff");
+            play.getCell(x, y).css("backgroundColor", "green");
 
             this.lastPosition[0] = x;
             this.lastPosition[1] = y;
@@ -82,19 +83,47 @@ var play = {
         }
     },
 
-   shoot : function (){
-      //опеределяем начальную позицию снаряда
-      
+   bomb : {
+      //начальная позиция снаряда
+      beginPosition : function() {
+          return [play.gun.lastPosition[0], play.gun.lastPosition[1] - 1];
+      },
+
+      speed : 200, //мс
+
+      //выстрел
+      shoot : function(){
+         //TODO: изменяется позиция по Y пока снаряд не исчезнет за игровое поле или не ударит в препятствие
+
+         var xStart = this.beginPosition()[0];
+         var yStart = this.beginPosition()[1];
+         var x = xStart;
+         var y = yStart;
+         var interval = setInterval(function(){
+             if (y >= -1) {
+                console.log(y);
+                play.getCell(x, y).css("backgroundColor", "red");
+                if(y != yStart) {
+                    play.getCell(x, y + 1).css("backgroundColor", "#ffffff");
+                }
+             }
+             y--;
+             if (y < -1) {
+                 clearInterval(interval);
+             }
+         }, this.speed);
+      }
+
    },
 
    go : function() {
        //Устанавливаем начальное положение пушки
        this.gun.moveTo(Math.round(playFieldProps.cols/2) - 1, playFieldProps.rows - 1);
-       //this.gun.lastPosition = [0, 0];
        //удаляем события с документа
        $(document).off("keydown");
        //устанавливаем события на нажатие клавиш управление
        $(document).on("keydown", function(key){
+           console.log(key.keyCode);
            switch(key.keyCode) {
                case 39 :
                    play.gun.moveToLeft();
@@ -102,8 +131,8 @@ var play = {
                case 37 :
                    play.gun.moveToRight();
                    break;
-               case 0:
-                   play.shoot();
+               case 0, 32:
+                   play.bomb.shoot();
                    break;
            }
        });
