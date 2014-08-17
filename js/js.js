@@ -2,37 +2,94 @@
  * Created by cdv on 11.08.2014.
  */
 var arrRows, arrCols;
-//свойства игрового поля
-var playFieldProps = {
-    rows : 15,
-    cols : 15,
-    styleTD : {
-        width : "10px",
-        height : "10px",
-        border : "1px solid black"
+/**
+ * Объект игрового поля
+ * properties - настройки игрового поля
+ * rows - кол-во ячеек по оси Y
+ * cols - кол-во ячеек по оси X
+ * styleCell - стиль ячейки
+ */
+var playField = {
+
+    properties : {
+        rows: 15,
+        cols: 15,
+        styleCell: {
+            width: "10px",
+            height: "10px",
+            border: "1px solid black",
+            emptyBackground : "#ffffff"
+        }
     },
-    html : ""
+
+    /**
+     * Полная очистка игрового поля
+     */
+    clearAllCells : function(){
+        arrRows.find("td").css("backgroundColor", this.properties.styleCell.emptyBackground);
+        console.log("clearAllCells");
+    },
+
+    /**
+     * Определение какую ячейку заполнять.
+     * @param iCol
+     * @param iRow
+     * @returns объект ячейки по положению на оси X Y
+     */
+    getCell : function(iCol, iRow) {
+        arrCols = $(arrRows[iRow]).find("td");
+        return $(arrCols[iCol]);
+    },
+
+    /**
+     * Очистка ячейки.
+     * @param x
+     * @param y
+     */
+    clearCell : function(x, y){
+        this.getCell(x, y).css("backgroundColor", this.properties.styleCell.emptyBackground);
+    },
+
+    /**
+     * Заполнение ячейки.
+     * @param x
+     * @param y
+     * @param bgColor - цвет ячейки
+     */
+    fillCell :  function(x, y, bgColor) {
+        console.log("fillCell (" + x + ", " + y + ")");
+        this.getCell(x, y).css("backgroundColor", bgColor);
+    },
+
+    blockUnblockPlayBtn : function(block) {
+        var playBtn = $(".playBtn");
+        if (block) {
+            playBtn.attr("disabled", "disabled");
+        } else {
+            playBtn.removeAttr("disabled");
+        }
+    }
 };
 
 (function(){
     //строим таблицу игрового поля
     var trs = "",
         tds = "";
-    for (var j = 0; j < playFieldProps.cols; j++) {
+    for (var j = 0; j < playField.properties.cols; j++) {
         tds = tds + "<td></td>";
     }
-    for (var i = 0; i < playFieldProps.rows; i++) {
+    for (var i = 0; i < playField.properties.rows; i++) {
         trs = trs + "<tr>" + tds + "</tr>";
     }
-    playFieldProps.html = "<table>" + trs + "</table>";
+    playField.html = "<table>" + trs + "</table>";
 
     //применяем стили игровому полю
     var divPlay = $("#playField");
-    divPlay.html(playFieldProps.html);
+    divPlay.html(playField.html);
     divPlay.find("td").css({
-        width  : playFieldProps.styleTD.width,
-        height : playFieldProps.styleTD.height,
-        border : playFieldProps.styleTD.border
+        width  : playField.properties.styleCell.width,
+        height : playField.properties.styleCell.height,
+        border : playField.properties.styleCell.border
     });
     divPlay.css({
         width : divPlay.find("table").width() + "px",
@@ -51,79 +108,171 @@ var playFieldProps = {
 
 var play = {
 
-    //возвращает объект ячейки по положению на оси X Y
-    getCell : function(iCol, iRow) {
-        arrCols = $(arrRows[iRow]).find("td");
-        return $(arrCols[iCol]);
+    bGameOver : false,
+
+    setGameOver : function() {
+        this.bGameOver = true;
+        playField.blockUnblockPlayBtn(false);
     },
 
+    /**
+     * Пушка.
+     */
     gun : {
-        lastPosition : [0, 0],
+        lastPosition : [-1, -1],
+        backgroundColor : "green",
 
         //перемещает объект на заданную позицию
         moveTo : function(x, y) {
-            console.log("x=" + x + " y="+y);
-            //не допускаем перемещения за пределы поля
-            if ((x > playFieldProps.cols - 1 || x < 0) || (y > playFieldProps.rows - 1 || y < 0)) {
+            //если игра закончена, пушка не должна двигаться
+            if (play.bGameOver) {
                 return;
             }
-            play.getCell(this.lastPosition[0], this.lastPosition[1]).css("backgroundColor", "#ffffff");
-            play.getCell(x, y).css("backgroundColor", "green");
+            console.log("moveTo(" + x + ", "+ y + ")");
+            //не допускаем перемещения за пределы поля
+            if ((x > playField.properties.cols - 1 || x < 0) || (y > playField.properties.rows - 1 || y < 0)) {
+                return;
+            }
+
+            if (!((this.lastPosition[0] == -1) && (this.lastPosition[1] == -1))) {
+                playField.clearCell(this.lastPosition[0], this.lastPosition[1]);
+            }
+            playField.fillCell(x, y, this.backgroundColor);
 
             this.lastPosition[0] = x;
             this.lastPosition[1] = y;
         },
 
         moveToLeft : function() {
-            this.moveTo(this.lastPosition[0] + 1, playFieldProps.rows - 1);
+            this.moveTo(this.lastPosition[0] + 1, playField.properties.rows - 1);
         },
 
         moveToRight : function() {
-            this.moveTo(this.lastPosition[0] - 1, playFieldProps.rows - 1);
+            this.moveTo(this.lastPosition[0] - 1, playField.properties.rows - 1);
+        },
+
+        activate : function(){
+            this.moveTo(Math.round(playField.properties.cols/2) - 1, playField.properties.rows - 1);
+            console.log("gun activate");
         }
     },
 
+    /**
+     * Снаряд.
+     */
    bomb : {
+
+       backgroundColor : "red",
+       speed : 200, //мс
+
       //начальная позиция снаряда
       beginPosition : function() {
           return [play.gun.lastPosition[0], play.gun.lastPosition[1] - 1];
       },
 
-      speed : 200, //мс
-
       //выстрел
       shoot : function(){
-         //TODO: изменяется позиция по Y пока снаряд не исчезнет за игровое поле или не ударит в препятствие
-
+         //если игра окончена, стрелять нельзя
+         if (play.bGameOver) {
+             return;
+         }
+          
          var xStart = this.beginPosition()[0];
          var yStart = this.beginPosition()[1];
          var x = xStart;
          var y = yStart;
          var interval = setInterval(function(){
              if (y >= -1) {
-                console.log(y);
-                play.getCell(x, y).css("backgroundColor", "red");
+                //console.log("interval : " + interval);
+                playField.fillCell(x, y, play.bomb.backgroundColor);
                 if(y != yStart) {
-                    play.getCell(x, y + 1).css("backgroundColor", "#ffffff");
+                    playField.clearCell(x, y + 1);
                 }
              }
-             y--;
-             if (y < -1) {
+
+             if (y < 0) {
                  clearInterval(interval);
+             } else {
+                 y--;
              }
          }, this.speed);
       }
 
    },
 
+    /**
+     * Мишень.
+     */
+    target : {
+        backgroundColor : "black",
+        speed : 1000, //мс
+
+        xStart : function () {
+            return Math.floor(Math.random() * playField.properties.cols);
+        },
+
+        create : function(){
+            var xStart = this.xStart();
+            var yStart = 0;
+            var x = xStart;
+            var y = yStart;
+
+            if (isNaN(x) || isNaN(y)) {
+                return; //TODO: тут бы ошибку куда то вывести
+            }
+
+            //Создание и движение одной ячейки
+            var oneCellDo = function (x, y){
+                var interval = setInterval(function(){
+                    if (play.bGameOver) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    if (y > yStart){
+                        playField.clearCell(x, y - 1);
+                    }
+                    playField.fillCell(x, y, play.target.backgroundColor);
+                    //если мишень достигла края игрового поля - это проигрыш
+                    if (y >= (playField.properties.rows - 1)) {
+                        clearInterval(interval);
+                        play.setGameOver();
+                    } else {
+                        y++;
+                    }
+                }, play.target.speed);
+            };
+
+            oneCellDo(x, y);
+
+        },
+
+        activate : function() {
+            var interval = setInterval( function(){
+               if (play.bGameOver) {
+                   clearInterval(interval);
+               } else {
+                   play.target.create();
+               }
+            }, play.target.speed);
+        }
+
+    },
+
+    /**
+     * Запуск игры.
+     */
    go : function() {
-       //Устанавливаем начальное положение пушки
-       this.gun.moveTo(Math.round(playFieldProps.cols/2) - 1, playFieldProps.rows - 1);
+       //блокировка кнопки PLAY
+       playField.blockUnblockPlayBtn(true);
+       //очистка игрового поля
+       playField.clearAllCells();
+       //сброс признака окончания игры
+       play.bGameOver = false;
        //удаляем события с документа
        $(document).off("keydown");
        //устанавливаем события на нажатие клавиш управление
        $(document).on("keydown", function(key){
-           console.log(key.keyCode);
+          // console.log(key.keyCode);
            switch(key.keyCode) {
                case 39 :
                    play.gun.moveToLeft();
@@ -136,6 +285,11 @@ var play = {
                    break;
            }
        });
+
+       //активация пушки
+       this.gun.activate();
+       //запуск движение мишени
+       this.target.activate();
    }
 };
 
