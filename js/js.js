@@ -13,7 +13,7 @@ var playField = {
 
     properties : {
         rows: 15,
-        cols: 15,
+        cols: 25,
         styleCell: {
             width: "10px",
             height: "10px",
@@ -27,7 +27,7 @@ var playField = {
      */
     clearAllCells : function(){
         arrRows.find("td").css("backgroundColor", this.properties.styleCell.emptyBackground);
-        console.log("clearAllCells");
+      //  console.log("clearAllCells");
     },
 
     /**
@@ -47,7 +47,9 @@ var playField = {
      * @param y
      */
     clearCell : function(x, y){
-        this.getCell(x, y).css("backgroundColor", this.properties.styleCell.emptyBackground);
+        var oCell = this.getCell(x, y);
+        oCell.css("backgroundColor", this.properties.styleCell.emptyBackground);
+        oCell.removeAttr("targetId");
     },
 
     /**
@@ -56,9 +58,22 @@ var playField = {
      * @param y
      * @param bgColor - цвет ячейки
      */
-    fillCell :  function(x, y, bgColor) {
-        console.log("fillCell (" + x + ", " + y + ")");
-        this.getCell(x, y).css("backgroundColor", bgColor);
+    fillCell :  function(x, y, bgColor, obj) {
+     //   console.log("fillCell (" + x + ", " + y + ")");
+        var oCell = this.getCell(x, y);
+        oCell.css("backgroundColor", bgColor);
+        if (obj instanceof Object) {
+            for (var prop in obj) {
+                if (prop == "targetId") {
+                    oCell.attr(prop, obj[prop]);
+                }
+                if (prop == "destroyTarget") {
+                    if (oCell.attr("targetId") != undefined) {
+                        clearInterval(oCell.attr("targetId"));
+                    }
+                }
+            }
+        }
     },
 
     blockUnblockPlayBtn : function(block) {
@@ -128,7 +143,7 @@ var play = {
             if (play.bGameOver) {
                 return;
             }
-            console.log("moveTo(" + x + ", "+ y + ")");
+          //  console.log("moveTo(" + x + ", "+ y + ")");
             //не допускаем перемещения за пределы поля
             if ((x > playField.properties.cols - 1 || x < 0) || (y > playField.properties.rows - 1 || y < 0)) {
                 return;
@@ -153,7 +168,7 @@ var play = {
 
         activate : function(){
             this.moveTo(Math.round(playField.properties.cols/2) - 1, playField.properties.rows - 1);
-            console.log("gun activate");
+         //   console.log("gun activate");
         }
     },
 
@@ -163,7 +178,7 @@ var play = {
    bomb : {
 
        backgroundColor : "red",
-       speed : 200, //мс
+       speed : 100, //мс
 
       //начальная позиция снаряда
       beginPosition : function() {
@@ -184,14 +199,16 @@ var play = {
          var interval = setInterval(function(){
              if (y >= -1) {
                 //console.log("interval : " + interval);
-                playField.fillCell(x, y, play.bomb.backgroundColor);
+                playField.fillCell(x, y, play.bomb.backgroundColor, {destroyTarget : true});
                 if(y != yStart) {
                     playField.clearCell(x, y + 1);
                 }
              }
-
+             //выстрел улетел за поле - очищаем интервал
              if (y < 0) {
                  clearInterval(interval);
+           //  } else if () {
+
              } else {
                  y--;
              }
@@ -224,6 +241,7 @@ var play = {
             //Создание и движение одной ячейки
             var oneCellDo = function (x, y){
                 var interval = setInterval(function(){
+                    console.log("interval = " + interval);
                     if (play.bGameOver) {
                         clearInterval(interval);
                         return;
@@ -231,7 +249,7 @@ var play = {
                     if (y > yStart){
                         playField.clearCell(x, y - 1);
                     }
-                    playField.fillCell(x, y, play.target.backgroundColor);
+                    playField.fillCell(x, y, play.target.backgroundColor, {targetId : interval});
                     //если мишень достигла края игрового поля - это проигрыш
                     if (y >= (playField.properties.rows - 1)) {
                         clearInterval(interval);
