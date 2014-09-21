@@ -1,4 +1,10 @@
-Browser-mini-game
-=================
+Browser mini-shooter
+-----------------
 
-Попытка создать простую игру на Javascript (аля тетрис)
+http://cdv-dev.github.io/Browser-mini-game
+
+**Клавиши управления:**
+
+*"space"* - стрелять;<br/>
+*"left", "right"* - перемещение пушки.
+
