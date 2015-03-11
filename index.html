@@ -8,12 +8,18 @@
 <body>
   <div id="content">
       <div id="controlBtns" align="center">
-          <input class="playBtn" type="button" value="PLAY">
+          <input class="playBtn" type="button" value="PLAY" id="btn-play">
       </div>
       <div id="playField">
       </div>
   </div>
   <script src="js/jquery.min.js" type="text/javascript"></script>
   <script src="js/js.js" type="text/javascript"></script>
+  <script type="text/javascript">
+      var oBtnPlay = document.getElementById("btn-play");
+      oBtnPlay.onclick = function(){
+          play.go();
+      };
+  </script>
 </body>
 </html>

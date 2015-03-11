@@ -86,14 +86,73 @@ var playField = {
     }
 };
 
+//NEW
+var play = (function(){
+
+    /**
+     * Game field settings
+     * @constructor
+     */
+    var SettingsClass = function(){
+
+        var rows = 15,
+            cols = 25,
+            cellStyles = {
+                width : "10px",
+                height: "10px",
+                border: "1px solid black"
+            };
+
+
+        this.getRows = function() {
+            return rows;
+        };
+        this.getCols = function(){
+            return cols;
+        };
+        this.getStyles = function(){
+            return cellStyles;
+        }
+
+    };
+
+    var oGame = {
+        playBtn : document.getElementById("btn-play")
+    };
+
+    /**
+     * Method for block/unblock play button
+     */
+    var blockUnblockPlayBtn = function (bBlock) {
+        if (bBlock) {
+            oGame.playBtn.setAttribute("disabled", "disabled");
+        } else {
+            oGame.playBtn.removeAttribute("disabled");
+        }
+    };
+
+    return {
+
+        go : function(){
+            console.log("start go()");
+            //block play button
+            blockUnblockPlayBtn(true)
+
+        }
+    }
+
+})();
+
+/*
 (function(){
     //строим таблицу игрового поля
     var trs = "",
-        tds = "";
-    for (var j = 0; j < playField.properties.cols; j++) {
+        tds = "",
+        i = 0;
+    for (i = 0, j = playField.properties.cols; i < j; j++) {
         tds = tds + "<td></td>";
     }
-    for (var i = 0; i < playField.properties.rows; i++) {
+    for (i = 0, j = playField.properties.rows; i < j; i++) {
         trs = trs + "<tr>" + tds + "</tr>";
     }
     playField.html = "<table>" + trs + "</table>";
@@ -114,13 +173,16 @@ var playField = {
     });
     arrRows = divPlay.find("table").find("tr");
 
+
+
     //событие на кнопку play
     $("#controlBtns").find("input[type=button]").on("click", function(){
         play.go();
     })
 }());
 
-
+*/
+/*
 var play = {
 
     bGameOver : false,
@@ -133,6 +195,7 @@ var play = {
     /**
      * Пушка.
      */
+/*
     gun : {
         lastPosition : [-1, -1],
         backgroundColor : "green",
@@ -175,6 +238,7 @@ var play = {
     /**
      * Снаряд.
      */
+/*
    bomb : {
 
        backgroundColor : "red",
@@ -220,6 +284,7 @@ var play = {
     /**
      * Мишень.
      */
+/*
     target : {
         backgroundColor : "black",
         speed : 1000, //мс
@@ -279,6 +344,7 @@ var play = {
     /**
      * Запуск игры.
      */
+/*
    go : function() {
        //блокировка кнопки PLAY
        playField.blockUnblockPlayBtn(true);
@@ -310,4 +376,5 @@ var play = {
        this.target.activate();
    }
 };
+*/
 
