@@ -9,3 +9,8 @@ body {
 #controlBtns {
   margin: 0 0 10px 0;
 }
+/*centering table*/
+.play-field-wrapper table {
+    margin-right: auto;
+    margin-left: auto;
+}

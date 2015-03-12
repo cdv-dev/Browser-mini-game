@@ -9,6 +9,7 @@ var arrRows, arrCols;
  * cols - кол-во ячеек по оси X
  * styleCell - стиль ячейки
  */
+    /*
 var playField = {
 
     properties : {
@@ -25,6 +26,7 @@ var playField = {
     /**
      * Полная очистка игрового поля
      */
+/*
     clearAllCells : function(){
         arrRows.find("td").css("backgroundColor", this.properties.styleCell.emptyBackground);
       //  console.log("clearAllCells");
@@ -36,6 +38,7 @@ var playField = {
      * @param iRow
      * @returns объект ячейки по положению на оси X Y
      */
+/*
     getCell : function(iCol, iRow) {
         arrCols = $(arrRows[iRow]).find("td");
         return $(arrCols[iCol]);
@@ -46,6 +49,7 @@ var playField = {
      * @param x
      * @param y
      */
+/*
     clearCell : function(x, y){
         var oCell = this.getCell(x, y);
         oCell.css("backgroundColor", this.properties.styleCell.emptyBackground);
@@ -58,6 +62,7 @@ var playField = {
      * @param y
      * @param bgColor - цвет ячейки
      */
+/*
     fillCell :  function(x, y, bgColor, obj) {
      //   console.log("fillCell (" + x + ", " + y + ")");
         var oCell = this.getCell(x, y);
@@ -85,6 +90,7 @@ var playField = {
         }
     }
 };
+*/
 
 //NEW
 var play = (function(){
@@ -93,7 +99,7 @@ var play = (function(){
      * Game field settings
      * @constructor
      */
-    var SettingsClass = function(){
+    var Settings = function(){
 
         var rows = 15,
             cols = 25,
@@ -103,41 +109,147 @@ var play = (function(){
                 border: "1px solid black"
             };
 
-
         this.getRows = function() {
             return rows;
         };
         this.getCols = function(){
             return cols;
         };
-        this.getStyles = function(){
+        this.getCellStyles = function() {
             return cellStyles;
-        }
+        };
 
     };
 
     var oGame = {
-        playBtn : document.getElementById("btn-play")
+        playBtn : document.getElementById("btn-play"),
+        fieldWrapper : document.getElementById("play-field"),
+        cssRulesId : "game-styles"
     };
 
     /**
      * Method for block/unblock play button
+     * @param bLock - true - lock, false - unlock
      */
-    var blockUnblockPlayBtn = function (bBlock) {
-        if (bBlock) {
+    var lockUnlockPlayBtn = function (bLock) {
+        if (bLock) {
             oGame.playBtn.setAttribute("disabled", "disabled");
         } else {
             oGame.playBtn.removeAttribute("disabled");
         }
     };
 
+    /**
+     * Method for generated css rules
+     */
+    var createStyles = function(oSettings){
+        var oHead = document.getElementsByTagName("head")[0],
+            oStyle = document.getElementsByName("style"),
+            bStyle = false,
+            i, j;
+
+        if (oSettings == null) {
+            throw new Error("method createStyles(): No settings.");
+        }
+
+        if (oHead == null) {
+            return;
+        }
+
+        //check that styles are created already
+        for (i = 0, j = oStyle.length; i < j; i++) {
+            if (oStyle[i].id === oGame.cssRulesId) {
+                bStyle = true;
+            }
+        }
+
+        if (bStyle) {
+            return;
+        }
+
+        //created css rules
+        var oNewStyle = document.createElement("style");
+        oNewStyle.type = "text/css";
+        oNewStyle.id = oGame.cssRulesId;
+
+        var cssRules = ".play-field-wrapper table td {";
+        if (oSettings.getCellStyles() !== null && typeof oSettings.getCellStyles() === "object") {
+            var oCellStyle = oSettings.getCellStyles();
+            for (var key in oCellStyle) {
+                if (oCellStyle.hasOwnProperty(key)){
+                   cssRules = cssRules + key + ":" + oCellStyle[key] + ";"
+                }
+            }
+        }
+        cssRules = cssRules + "}";
+
+        if (oNewStyle.stylesheet) {
+            //IE
+            oNewStyle.style.cssText = cssRules;
+        } else {
+            oNewStyle.appendChild( document.createTextNode(cssRules) );
+        }
+
+        oHead.appendChild(oNewStyle);
+
+    };
+
+    /**
+     * Method for creating play field
+     */
+    var createPlayField = function(oSettings){
+        var oTr,
+            oTd,
+            oTable,
+            iTr,
+            iTd,
+            iTrsL,
+            iTdsL;
+
+        if (oSettings == null) {
+            throw new Error("Method createPlayField(): No settings.");
+        }
+
+        oTable = document.createElement("table");
+
+        //rows
+        for (iTr = 0, iTrsL = oSettings.getRows(); iTr < iTrsL; iTr++) {
+            oTr = document.createElement("tr");
+            //cols
+            for (iTd = 0, iTdsL = oSettings.getCols(); iTd < iTdsL; iTd++) {
+                oTd = document.createElement("td");
+                oTr.appendChild(oTd);
+            }
+            oTable.appendChild(oTr);
+        }
+
+        return oTable;
+    };
+
     return {
 
         go : function(){
-            console.log("start go()");
-            //block play button
-            blockUnblockPlayBtn(true)
+            try {
+                console.log("start go()");
+                //lock play button
+                lockUnlockPlayBtn(true);
 
+            } catch(e) {
+                alert(e.message);
+            }
+        },
+
+        createGame : function(){
+            try {
+                var oSettings = new Settings();
+                //create play field styles
+                createStyles( oSettings );
+                //create play field
+                oGame.fieldWrapper.appendChild( createPlayField(oSettings) );
+
+            } catch (e) {
+                alert(e.message);
+            }
         }
     }
 
