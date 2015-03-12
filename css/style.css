@@ -3,14 +3,19 @@ body {
     margin: 0;
 }
 
-#content {
-    margin: 100px 0;
+.content {
+    margin: 0 auto;
 }
-#controlBtns {
-  margin: 0 0 10px 0;
+
+.field-settings {
+    padding: 10px;
 }
 /*centering table*/
 .play-field-wrapper table {
     margin-right: auto;
     margin-left: auto;
+}
+
+.play-btn-wrapper {
+
 }

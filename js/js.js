@@ -1,7 +1,7 @@
 /**
  * Created by cdv on 11.08.2014.
  */
-var arrRows, arrCols;
+//var arrRows, arrCols;
 /**
  * Объект игрового поля
  * properties - настройки игрового поля
@@ -96,10 +96,9 @@ var playField = {
 var play = (function(){
 
     /**
-     * Game field settings
-     * @constructor
+     * Game global settings
      */
-    var Settings = function(){
+    var settings = (function(){
 
         var rows = 15,
             cols = 25,
@@ -107,127 +106,204 @@ var play = (function(){
                 width : "10px",
                 height: "10px",
                 border: "1px solid black"
-            };
+            },
+            cssRulesId = "game-styles";
 
-        this.getRows = function() {
-            return rows;
-        };
-        this.getCols = function(){
-            return cols;
-        };
-        this.getCellStyles = function() {
-            return cellStyles;
-        };
 
-    };
+        return {
 
-    var oGame = {
-        playBtn : document.getElementById("btn-play"),
-        fieldWrapper : document.getElementById("play-field"),
-        cssRulesId : "game-styles"
-    };
+            getRows : function() {
+                return rows;
+            },
 
-    /**
-     * Method for block/unblock play button
-     * @param bLock - true - lock, false - unlock
-     */
-    var lockUnlockPlayBtn = function (bLock) {
-        if (bLock) {
-            oGame.playBtn.setAttribute("disabled", "disabled");
-        } else {
-            oGame.playBtn.removeAttribute("disabled");
-        }
-    };
+            setRows : function(iRows) {
+                if (iRows !== undefined) {
+                    if (!isNaN(parseInt(iRows, 10))) {
+                        rows = iRows;
+                    }
+                }
+            },
 
-    /**
-     * Method for generated css rules
-     */
-    var createStyles = function(oSettings){
-        var oHead = document.getElementsByTagName("head")[0],
-            oStyle = document.getElementsByName("style"),
-            bStyle = false,
-            i, j;
+            getCols : function(){
+                return cols;
+            },
 
-        if (oSettings == null) {
-            throw new Error("method createStyles(): No settings.");
-        }
+            setCols : function(iCols) {
+                if (iCols !== undefined) {
+                    if (!isNaN(parseInt(iCols, 10))) {
+                        cols = iCols;
+                    }
+                }
+            },
 
-        if (oHead == null) {
-            return;
-        }
+            getCellStyles : function() {
+                return cellStyles;
+            },
 
-        //check that styles are created already
-        for (i = 0, j = oStyle.length; i < j; i++) {
-            if (oStyle[i].id === oGame.cssRulesId) {
-                bStyle = true;
+            getCssRulesId : function(){
+                return cssRulesId;
             }
+
+        };
+    }());
+
+    /**
+     * Some object of game page
+     */
+    var oGameObjects = (function(){
+        return {
+            playBtn : document.getElementById("btn-play"),
+            fieldWrapper : document.getElementById("play-field"),
+            selRows : document.getElementById("sel-rows"),
+            selCols : document.getElementById("sel-columns")
         }
+    })();
 
-        if (bStyle) {
-            return;
-        }
+    /**
+     * Events handlers
+     */
+    var eventHandlers = (function(){
 
-        //created css rules
-        var oNewStyle = document.createElement("style");
-        oNewStyle.type = "text/css";
-        oNewStyle.id = oGame.cssRulesId;
-
-        var cssRules = ".play-field-wrapper table td {";
-        if (oSettings.getCellStyles() !== null && typeof oSettings.getCellStyles() === "object") {
-            var oCellStyle = oSettings.getCellStyles();
-            for (var key in oCellStyle) {
-                if (oCellStyle.hasOwnProperty(key)){
-                   cssRules = cssRules + key + ":" + oCellStyle[key] + ";"
+        var lockUnlockPlayBtn = function(oBtn, bLock){
+            if (oBtn !== null) {
+                if (bLock) {
+                    oBtn.disable = true;
+                } else {
+                    oBtn.disable = false;
                 }
             }
-        }
-        cssRules = cssRules + "}";
+        };
 
-        if (oNewStyle.stylesheet) {
-            //IE
-            oNewStyle.style.cssText = cssRules;
-        } else {
-            oNewStyle.appendChild( document.createTextNode(cssRules) );
-        }
+        return {
+            lockUnlockPlayBtn : lockUnlockPlayBtn
+        };
 
-        oHead.appendChild(oNewStyle);
-
-    };
+    })();
 
     /**
-     * Method for creating play field
+     * Created page elements
      */
-    var createPlayField = function(oSettings){
-        var oTr,
-            oTd,
-            oTable,
-            iTr,
-            iTd,
-            iTrsL,
-            iTdsL;
+    var create = (function(){
+        /**
+         * Method for creating play field dynamic styles
+         * @param strStyleId - id of style
+         * @param oRules - rules object
+         */
+        var createStyles = function(strStyleId, oRules){
+            var oHead = document.getElementsByTagName("head")[0],
+                oStyle = document.getElementsByName("style"),
+                bStyle = false,
+                i, j;
 
-        if (oSettings == null) {
-            throw new Error("Method createPlayField(): No settings.");
-        }
-
-        oTable = document.createElement("table");
-
-        //rows
-        for (iTr = 0, iTrsL = oSettings.getRows(); iTr < iTrsL; iTr++) {
-            oTr = document.createElement("tr");
-            //cols
-            for (iTd = 0, iTdsL = oSettings.getCols(); iTd < iTdsL; iTd++) {
-                oTd = document.createElement("td");
-                oTr.appendChild(oTd);
+            if (oRules == null) {
+                throw new Error("Error. createStyles(): No rules.");
             }
-            oTable.appendChild(oTr);
-        }
 
-        return oTable;
-    };
+            if (strStyleId == null || strStyleId === "") {
+                throw new Error("Error. createStyles() : no StyleId");
+            }
+
+            if (oHead == null) {
+                return;
+            }
+
+            //check that styles are created already
+            for (i = 0, j = oStyle.length; i < j; i++) {
+                if (oStyle[i].id === strStyleId) {
+                    bStyle = true;
+                }
+            }
+
+            if (bStyle) {
+                return;
+            }
+
+            //created css rules
+            var oNewStyle = document.createElement("style");
+            oNewStyle.type = "text/css";
+            oNewStyle.id = strStyleId;
+
+            var cssRules = ".play-field-wrapper table td {";
+            if (oRules !== null  && typeof oRules === "object") {
+                for (var key in oRules) {
+                    if (oRules.hasOwnProperty(key)){
+                        cssRules = cssRules + key + ":" + oRules[key] + ";"
+                    }
+                }
+            }
+            cssRules = cssRules + "}";
+
+            if (oNewStyle.stylesheet) {
+                //IE
+                oNewStyle.style.cssText = cssRules;
+            } else {
+                oNewStyle.appendChild( document.createTextNode(cssRules) );
+            }
+
+            oHead.appendChild(oNewStyle);
+
+        };
+
+        /**
+         * Method for creating play field
+         * @param wrapperId - id of block in which will inserted play field
+         * @param iRows - count rows of play field
+         * @param iCols - count columns of play field
+         */
+        var createPlayField = function(wrapperId, iRows, iCols){
+            var oTr,
+                oTd,
+                oTable,
+                iTr,
+                iTd,
+                iTrsL,
+                iTdsL;
+
+            if (wrapperId == null || wrapperId === ""){
+                throw new Error("Error. createPlayField() : no wrapperId");
+            }
+
+            oTable = document.createElement("table");
+
+            //rows
+            for (iTr = 0, iTrsL = iRows; iTr < iTrsL; iTr++) {
+                oTr = document.createElement("tr");
+                //cols
+                for (iTd = 0, iTdsL = iCols; iTd < iTdsL; iTd++) {
+                    oTd = document.createElement("td");
+                    oTr.appendChild(oTd);
+                }
+                oTable.appendChild(oTr);
+            }
+
+            var wrapper = document.getElementById(wrapperId);
+            if (wrapper) {
+                wrapper.appendChild(oTable);
+            }
+        };
+
+        var addEvent = function(oElm, eventType, fnCallback){
+            try {
+                if (oElm.addEventListener) {
+                    oElm.addEventListener(eventType, fnCallback, false);
+                } else if (oElm.attachEvent) {
+                    oElm.attachEvent("on" + eventType, fnCallback);
+                } else {
+                    oElm["on" + eventType] = fnCallback;
+                }
+            } catch (e){}
+        };
+
+        return {
+            styles : createStyles,
+            playField : createPlayField,
+            event : addEvent
+        }
+    })();
 
     return {
 
+/*
         go : function(){
             try {
                 console.log("start go()");
@@ -238,19 +314,22 @@ var play = (function(){
                 alert(e.message);
             }
         },
+*/
 
-        createGame : function(){
+
+        createGame : function(wrapperId){
             try {
-                var oSettings = new Settings();
-                //create play field styles
-                createStyles( oSettings );
-                //create play field
-                oGame.fieldWrapper.appendChild( createPlayField(oSettings) );
+
+               create.styles(settings.getCssRulesId(), settings.getCellStyles());
+               create.playField(wrapperId, settings.getRows(), settings.getCols());
+
+               //TODO: events on changed cols and rows count
 
             } catch (e) {
                 alert(e.message);
             }
         }
+
     }
 
 })();
